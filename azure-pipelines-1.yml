@@ -1,0 +1,45 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  acrLoginServer: 'sejalgitopsacr2026.azurecr.io'
+  imageRepository: 'gitops-demo-app'
+  manifestRepo: 'aks-manifests-sejal'
+
+steps:
+- script: |
+    echo "<h1>GitOps Demo App - Sejal Sakhala</h1>" > index.html
+
+    cat <<EOF > Dockerfile
+    FROM nginx:latest
+    COPY index.html /usr/share/nginx/html/index.html
+    EOF
+  displayName: 'Create demo app files'
+
+- task: Docker@2
+  displayName: 'Build and Push Docker Image to ACR'
+  inputs:
+    containerRegistry: 'acr-sejal-connection'
+    repository: '$(imageRepository)'
+    command: 'buildAndPush'
+    Dockerfile: 'Dockerfile'
+    tags: |
+      $(Build.BuildId)
+
+- script: |
+    git config --global user.email "azuredevops@sejal.com"
+    git config --global user.name "Azure DevOps Pipeline"
+
+    git clone https://hedwig02:$(GITHUB_PAT)@github.com/hedwig02/$(manifestRepo).git
+
+    cd $(manifestRepo)
+
+    sed -i "s|image: .*|image: $(acrLoginServer)/$(imageRepository):$(Build.BuildId)|" deployment.yaml
+
+    git add deployment.yaml
+    git commit -m "Update image tag to $(Build.BuildId)" || echo "No changes to commit"
+    git push
+  displayName: 'Update Kubernetes Manifest Repo'
