@@ -7,17 +7,19 @@ pool:
 variables:
   acrLoginServer: 'sejalgitopsacr2026.azurecr.io'
   imageRepository: 'gitops-demo-app'
-  manifestRepo: 'aks-manifests-sejal'
 
 steps:
 - script: |
-    echo "<h1>GitOps Demo App - Sejal Sakhala</h1>" > index.html
+    echo "<h1>GitOps Demo App - Sejal Sakhala - Build $(Build.BuildId)</h1>" > index.html
 
-    cat <<EOF > Dockerfile
+    cat > Dockerfile <<EOF
     FROM nginx:latest
     COPY index.html /usr/share/nginx/html/index.html
     EOF
-  displayName: 'Create demo app files'
+
+    echo "Files created:"
+    ls -la
+  displayName: 'Create Demo App Files'
 
 - task: Docker@2
   displayName: 'Build and Push Docker Image to ACR'
@@ -33,15 +35,19 @@ steps:
     git config --global user.email "azuredevops@sejal.com"
     git config --global user.name "Azure DevOps Pipeline"
 
-    git clone https://hedwig02:${GITHUBPAT}@github.com/hedwig02/$(manifestRepo).git manifest-repo
+    echo "Cloning manifest repository..."
+    git clone https://hedwig02:${GITHUBPAT}@github.com/hedwig02/aks-manifests-sejal.git manifest-repo
 
     cd manifest-repo
-    git checkout main
 
-    echo "Files in manifest repo:"
+    echo "Files inside manifest repo:"
     ls -la
 
+    echo "Updating deployment.yaml image..."
     sed -i "s|image: .*|image: $(acrLoginServer)/$(imageRepository):$(Build.BuildId)|" deployment.yaml
+
+    echo "Updated deployment.yaml:"
+    cat deployment.yaml
 
     git add deployment.yaml
     git commit -m "Update image tag to $(Build.BuildId)" || echo "No changes to commit"
