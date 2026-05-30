@@ -33,15 +33,19 @@ steps:
     git config --global user.email "azuredevops@sejal.com"
     git config --global user.name "Azure DevOps Pipeline"
 
-    git clone https://hedwig02:${GITHUBPAT}@github.com/hedwig02/$(manifestRepo).git
+    git clone https://hedwig02:${GITHUBPAT}@github.com/hedwig02/$(manifestRepo).git manifest-repo
 
-    cd $(manifestRepo)
+    cd manifest-repo
+    git checkout main
+
+    echo "Files in manifest repo:"
+    ls -la
 
     sed -i "s|image: .*|image: $(acrLoginServer)/$(imageRepository):$(Build.BuildId)|" deployment.yaml
 
     git add deployment.yaml
     git commit -m "Update image tag to $(Build.BuildId)" || echo "No changes to commit"
-    git push
+    git push origin main
   displayName: 'Update Kubernetes Manifest Repo'
   env:
     GITHUBPAT: $(GITHUBPAT)
