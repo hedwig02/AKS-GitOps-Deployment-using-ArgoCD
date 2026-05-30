@@ -33,7 +33,7 @@ steps:
     git config --global user.email "azuredevops@sejal.com"
     git config --global user.name "Azure DevOps Pipeline"
 
-    git clone https://hedwig02:${GITHUB_PAT}@github.com/hedwig02/$(manifestRepo).git
+    git clone https://hedwig02:${GITHUBPAT}@github.com/hedwig02/$(manifestRepo).git
 
     cd $(manifestRepo)
 
@@ -44,4 +44,4 @@ steps:
     git push
   displayName: 'Update Kubernetes Manifest Repo'
   env:
-    GITHUB_PAT: $(GITHUB_PAT)
+    GITHUBPAT: $(GITHUBPAT)
